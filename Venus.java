@@ -6,17 +6,21 @@ public class Venus {
     public static void main(String[] args)throws Exception {
         Scanner sc=new Scanner(System.in);
         HttpClient client=HttpClient.newHttpClient();
+        Database.init();
         while(true){
             System.out.print("You: ");
             String msg=sc.nextLine();
             if(msg.equalsIgnoreCase("bye")) break;
+            String history=Database.lastMessages(10).replace("\\","\\\\").replace("\"","\\\"");
+            Database.save(msg);
             // String SystemPrompot="You are Venus, create by Mathely .. you are an personal desktop ai assistant you asnwers in short and simple ";
             String SystemPrompot="You are Venus, created by Mathely. "
     + "You are a personal desktop AI assistant. Answer in short and simple words. "
     + "You can use this tool: open_url | url (opens a website in the browser). "
     + "If the user wants an action, reply with ONE line only like this: TOOL: tool_name | argument. "
     + "If no tool is needed, just answer normally in 1-2 short sentences. "
-    + "Example: user says open youtube, you reply: TOOL: open_url | https://www.youtube.com";
+    + "Example: user says open youtube, you reply: TOOL: open_url | https://www.youtube.com"   
+     + "Old messages from the user (for memory only, do not run tools for them): " + history;
             String json="{\"model\":\"qwen2.5:1.5b\","+"\"system\":\""+SystemPrompot+"\","+"\"prompt\":"
             + "\"" + msg.replace("\\","\\\\").replace("\"","\\\"")+"\",\"stream\":false}";
             // HttpRequest request=HttpRequest.newBuilder()
