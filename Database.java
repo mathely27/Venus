@@ -3,7 +3,7 @@ import java.sql.*;
 public class Database {
     static final String URL = "jdbc:mysql://localhost:3306/venus?allowPublicKeyRetrieval=true&useSSL=false";
     static final String USER = "root";
-    static final String PASS = "7777";
+    static final String PASS = "xyz";
 
     static void init() {
         try (Connection c = DriverManager.getConnection(URL, USER, PASS);
