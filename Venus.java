@@ -10,7 +10,13 @@ public class Venus {
             System.out.print("You: ");
             String msg=sc.nextLine();
             if(msg.equalsIgnoreCase("bye")) break;
-            String SystemPrompot="You are Venus, create by Mathely .. you are an personal desktop ai assistant you asnwers in short and simple ";
+            // String SystemPrompot="You are Venus, create by Mathely .. you are an personal desktop ai assistant you asnwers in short and simple ";
+            String SystemPrompot="You are Venus, created by Mathely. "
+    + "You are a personal desktop AI assistant. Answer in short and simple words. "
+    + "You can use this tool: open_url | url (opens a website in the browser). "
+    + "If the user wants an action, reply with ONE line only like this: TOOL: tool_name | argument. "
+    + "If no tool is needed, just answer normally in 1-2 short sentences. "
+    + "Example: user says open youtube, you reply: TOOL: open_url | https://www.youtube.com";
             String json="{\"model\":\"qwen2.5:1.5b\","+"\"system\":\""+SystemPrompot+"\","+"\"prompt\":"
             + "\"" + msg.replace("\\","\\\\").replace("\"","\\\"")+"\",\"stream\":false}";
             // HttpRequest request=HttpRequest.newBuilder()
@@ -26,7 +32,14 @@ public class Venus {
              int s=body.indexOf(key)+key.length();
             int e=body.indexOf("\",\"done\"",s);
             String answ=body.substring(s,e);
-            System.out.println("Venus: "+answ.replace("\\n", "\n"));
+            String reply=answ.replace("\\n","\n").trim();
+            if(reply.startsWith("TOOL")){
+                String line=reply.substring(5).split("\n")[0];
+                String[] parts=line.split("\\|",2);
+                String name=parts[0].trim();
+                String arg=parts.length>1 ? parts[1].trim() : "";
+                System.out.println("Venus: "+Tools.run(name,arg));
+            }else{System.out.println("Venus: "+reply);}
 
 
         }
