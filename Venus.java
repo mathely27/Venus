@@ -13,19 +13,26 @@ public class Venus {
             if (msg.equalsIgnoreCase("bye")) break;
             String history = Database.lastMessages(10).replace("\\", "\\\\").replace("\"", "\\\"");
             Database.save(msg);
-            String sys = "You are Venus, created by Mathely. You are a personal desktop AI assistant. Answer in short and simple words. "
+            String sys = "You are Venus, a desktop assistant created by Mathely. Answer in short and simple words. "
+                + "When user wants an action, reply with ONLY ONE LINE in format: TOOL: tool_name | argument. "
                 + "Tools: "
+                + "open_app | app_name (opens Mac app) "
+                + "close_app | app_name (closes Mac app) "
                 + "open_url | url (opens website in browser) "
-                + "open_app | app_name (opens macOS app like Calculator, Safari, Notes) "
-                + "close_app | app_name (closes macOS app) "
-                + "create_file | path or path|content (creates file at path) "
+                + "create_file | path or path|content (creates file) "
                 + "delete_file | path (deletes file) "
                 + "read_file | path (reads file content) "
                 + "say | text (speaks text out loud) "
-                + "cmd | command (runs terminal shell command) "
-                + "If user wants an action, reply with ONE line only: TOOL: tool_name | argument. "
-                + "If no tool needed, reply normally in 1-2 short sentences. "
-                + "Chat memory: " + history;
+                + "cmd | command (runs shell command) "
+                + "Examples: "
+                + "User: open brave -> TOOL: open_app | Brave "
+                + "User: close brave -> TOOL: close_app | Brave "
+                + "User: say hello -> TOOL: say | hello "
+                + "User: open youtube -> TOOL: open_url | https://youtube.com "
+                + "User: open settings -> TOOL: open_app | System Settings "
+                + "User: create file test.txt -> TOOL: create_file | Desktop/test.txt "
+                + "If no tool needed, answer normally in 1-2 short sentences. "
+                + "Old chat: " + history;
             String json = "{\"model\":\"qwen2.5:1.5b\"," + "\"system\":\"" + sys + "\"," + "\"prompt\":"
                 + "\"" + msg.replace("\\", "\\\\").replace("\"", "\\\"") + "\",\"stream\":false}";
             HttpRequest request = HttpRequest.newBuilder()
@@ -46,9 +53,18 @@ public class Venus {
                 String name = parts[0].trim();
                 String arg = parts.length > 1 ? parts[1].trim() : "";
                 System.out.println("Venus: " + Tools.run(name, arg));
+            } else if (reply.contains(":") && isTool(reply.split(":", 2)[0].trim())) {
+                String[] parts = reply.split(":", 2);
+                System.out.println("Venus: " + Tools.run(parts[0].trim(), parts[1].trim()));
             } else {
                 System.out.println("Venus: " + reply);
             }
         }
+    }
+
+    static boolean isTool(String s) {
+        return s.equals("open_app") || s.equals("close_app") || s.equals("open_url")
+            || s.equals("create_file") || s.equals("delete_file") || s.equals("read_file")
+            || s.equals("say") || s.equals("cmd");
     }
 }
