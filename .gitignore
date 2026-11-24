@@ -1,0 +1,3 @@
+*.class
+*.db
+lib/sqlite-jdbc.jar
