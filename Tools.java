@@ -1,48 +1,25 @@
 import java.io.File;
 import java.nio.file.Files;
-
 public class Tools {
     public static String run(String name, String arg) {
         try {
-            arg = arg.trim();
             switch (name) {
                 case "open_url":
-                    if (!arg.startsWith("http")) arg = (arg.contains(".") ? "https://" : "https://www.") + arg + (arg.contains(".") ? "" : ".com");
-                    new ProcessBuilder("open", arg).start();
-                    return "Opened " + arg;
+                    return openUrl(arg);
                 case "open_app":
-                    Process p = new ProcessBuilder("open", "-a", arg).start();
-                    if (p.waitFor() != 0) {
-                        Process fp = new ProcessBuilder("zsh", "-c", "mdfind \"kMDItemContentType == 'com.apple.application-bundle'\" | grep -i \"" + arg + "\" | head -n 1").start();
-                        String path = new String(fp.getInputStream().readAllBytes()).trim();
-                        if (!path.isEmpty()) new ProcessBuilder("open", path).start();
-                        else return "App not found: " + arg;
-                    }
-                    return "Opened " + arg;
+                    return openApp(arg);
                 case "close_app":
-                    new ProcessBuilder("pkill", "-f", "-i", arg).start().waitFor();
-                    return "Closed " + arg;
+                    return closeApp(arg);
                 case "create_file":
-                    String[] fp = arg.split("\\|", 2);
-                    File cf = resolveFile(fp[0].trim());
-                    if (cf.getParentFile() != null) cf.getParentFile().mkdirs();
-                    if (fp.length > 1) Files.writeString(cf.toPath(), fp[1].trim());
-                    else cf.createNewFile();
-                    return "Created " + cf.getPath();
+                    return createFile(arg);
                 case "delete_file":
-                    File df = resolveFile(arg);
-                    return df.delete() ? "Deleted " + df.getPath() : "File not found";
+                    return deleteFile(arg);
                 case "read_file":
-                    File rf = resolveFile(arg);
-                    return Files.exists(rf.toPath()) ? Files.readString(rf.toPath()) : "File not found";
+                    return readFile(arg);
                 case "say":
-                    new ProcessBuilder("say", arg).start();
-                    return "Speaking: " + arg;
+                    return sayText(arg);
                 case "cmd":
-                    Process cp = new ProcessBuilder("zsh", "-c", arg).start();
-                    String out = new String(cp.getInputStream().readAllBytes()).trim();
-                    String err = new String(cp.getErrorStream().readAllBytes()).trim();
-                    return out.isEmpty() ? (err.isEmpty() ? "Done" : err) : out;
+                    return runCmd(arg);
                 default:
                     return "Tool not found: " + name;
             }
@@ -50,11 +27,52 @@ public class Tools {
             return "Error: " + e.getMessage();
         }
     }
+    static String openUrl(String url) throws Exception {
+        if (!url.startsWith("http")) {
+            url = "https://" + url;
+        }
+        new ProcessBuilder("open", url).start();
+        return "Opened " + url;
+    }
+    static String openApp(String app) throws Exception {
+        Process p = new ProcessBuilder("open", "-a", app).start();
+        if (p.waitFor() != 0) {
+            new ProcessBuilder("open", "-a", app + " Browser").start();
+        }
+        return "Opened " + app;
+    }
+    static String closeApp(String app) throws Exception {
+        new ProcessBuilder("pkill", "-f", "-i", app).start();
+        return "Closed " + app;
+    }
+    static String createFile(String path) throws Exception {
+        File file = new File(path);
+        file.createNewFile();
+        return "Created " + file.getName();
+    }
 
-    static File resolveFile(String path) {
-        String home = System.getProperty("user.home");
-        if (path.startsWith("~")) path = home + path.substring(1);
-        else if (path.startsWith("Desktop/") || path.startsWith("Downloads/") || path.startsWith("Documents/")) path = home + "/" + path;
-        return new File(path);
+    static String deleteFile(String path) throws Exception {
+        File file = new File(path);
+        if (file.delete()) {
+            return "Deleted " + file.getName();
+        }
+        return "File not found";
+    }
+
+    static String readFile(String path) throws Exception {
+        File file = new File(path);
+        if (file.exists()) {
+            return Files.readString(file.toPath());
+        }
+        return "File not found";
+    }
+
+    static String sayText(String text) throws Exception {
+        new ProcessBuilder("say", text).start();
+        return "Speaking: " + text;
+    }
+    static String runCmd(String cmd) throws Exception {
+        Process p = new ProcessBuilder("zsh", "-c", cmd).start();
+        return new String(p.getInputStream().readAllBytes()).trim();
     }
 }
